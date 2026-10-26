@@ -42,4 +42,29 @@ class StorageCheckCommandTest extends TestCase
             ->doesntExpectOutputToContain('RuntimeException')
             ->assertExitCode(1);
     }
+
+    public function test_storage_check_fails_when_probe_cannot_be_deleted(): void
+    {
+        $disk = Mockery::mock(FilesystemAdapter::class);
+        $disk->shouldReceive('put')->once()->andReturnTrue();
+        $disk->shouldReceive('get')->once()->andReturn('tet-memory-r2-health-check');
+        $disk->shouldReceive('delete')->twice()->andReturnFalse();
+        Storage::shouldReceive('disk')->with('r2')->andReturn($disk);
+
+        $this->artisan('app:storage-check')
+            ->expectsOutput('R2 storage check failed')
+            ->assertExitCode(1);
+    }
+
+    public function test_storage_check_redacts_disk_resolution_failure(): void
+    {
+        Storage::shouldReceive('disk')->with('r2')->andThrow(new RuntimeException(
+            'R2_SECRET_SHOULD_NOT_LEAK'
+        ));
+
+        $this->artisan('app:storage-check')
+            ->expectsOutput('R2 storage check failed')
+            ->doesntExpectOutputToContain('R2_SECRET_SHOULD_NOT_LEAK')
+            ->assertExitCode(1);
+    }
 }

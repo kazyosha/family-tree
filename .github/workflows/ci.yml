@@ -145,7 +145,10 @@ jobs:
       - name: Reject literal provider credentials
         shell: bash
         run: |
-          if git grep -nEI '(postgres(ql)?://[^[:space:]]+@|R2_SECRET_ACCESS_KEY=[A-Za-z0-9+/]{20,}|R2_ACCESS_KEY_ID=[A-Za-z0-9]{20,}|https://[a-f0-9]{32}\.r2\.cloudflarestorage\.com)' -- ':!.env.example'; then
-            echo 'Possible literal Neon or R2 credential found.'
-            exit 1
-          fi
+          pattern='(postgres(ql)?://[^[:space:]]+@|DB_PASSWORD=[A-Za-z0-9_+=/-]{24,}|R2_SECRET_ACCESS_KEY=[A-Za-z0-9+/]{20,}|R2_ACCESS_KEY_ID=[A-Za-z0-9]{20,}|https://[a-f0-9]{32}\.r2\.cloudflarestorage\.com)'
+          for revision in $(git rev-list --all); do
+            if git grep -nEI "$pattern" "$revision" -- .; then
+              echo "Possible literal Neon or R2 credential found in $revision."
+              exit 1
+            fi
+          done

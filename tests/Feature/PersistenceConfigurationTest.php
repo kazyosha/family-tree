@@ -36,6 +36,8 @@ class PersistenceConfigurationTest extends TestCase
             'SESSION_DRIVER' => null,
             'CACHE_STORE' => null,
             'LOG_CHANNEL' => null,
+            'DB_SSLMODE' => null,
+            'SESSION_SECURE_COOKIE' => null,
         ]);
 
         $this->assertFalse($this->loadConfig('app')['debug']);
@@ -43,6 +45,8 @@ class PersistenceConfigurationTest extends TestCase
         $this->assertSame('database', $this->loadConfig('session')['driver']);
         $this->assertSame('database', $this->loadConfig('cache')['default']);
         $this->assertSame('stderr', $this->loadConfig('logging')['default']);
+        $this->assertSame('require', $this->loadConfig('database')['connections']['pgsql']['sslmode']);
+        $this->assertTrue($this->loadConfig('session')['secure']);
         $this->assertNotSame('file', $this->loadConfig('session')['driver']);
         $this->assertNotSame('file', $this->loadConfig('cache')['default']);
     }

@@ -31,4 +31,15 @@ class HomePageTest extends TestCase
     {
         $this->get('/up')->assertOk();
     }
+
+    public function test_vercel_forwarded_https_headers_generate_secure_asset_urls(): void
+    {
+        $response = $this->withHeaders([
+            'X-Forwarded-Host' => 'family.example',
+            'X-Forwarded-Proto' => 'https',
+        ])->get('/');
+
+        $response->assertOk();
+        $this->assertStringContainsString('https://family.example/build/assets/', $response->getContent());
+    }
 }

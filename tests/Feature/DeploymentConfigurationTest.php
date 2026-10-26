@@ -38,4 +38,12 @@ class DeploymentConfigurationTest extends TestCase
 
         $this->assertStringContainsString('!.env.example', $dockerignore);
     }
+
+    public function test_secret_scan_checks_history_and_the_example_environment_file(): void
+    {
+        $workflow = file_get_contents(base_path('.github/workflows/ci.yml'));
+
+        $this->assertStringContainsString('git rev-list --all', $workflow);
+        $this->assertStringNotContainsString(':!.env.example', $workflow);
+    }
 }

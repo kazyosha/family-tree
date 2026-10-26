@@ -15,12 +15,13 @@ class StorageCheckCommand extends Command
 
     public function handle(): int
     {
-        $disk = Storage::disk('r2');
+        $disk = null;
         $path = '_health/'.Str::uuid().'.txt';
         $content = 'tet-memory-r2-health-check';
         $created = false;
 
         try {
+            $disk = Storage::disk('r2');
             $disk->put($path, $content);
             $created = true;
 
@@ -28,6 +29,11 @@ class StorageCheckCommand extends Command
                 throw new \RuntimeException('R2 probe content mismatch');
             }
 
+            if (! $disk->delete($path)) {
+                throw new \RuntimeException('R2 probe cleanup failed');
+            }
+
+            $created = false;
             $this->info('R2 storage check passed');
 
             return self::SUCCESS;
@@ -36,7 +42,7 @@ class StorageCheckCommand extends Command
 
             return self::FAILURE;
         } finally {
-            if ($created) {
+            if ($created && $disk !== null) {
                 try {
                     $disk->delete($path);
                 } catch (Throwable) {
