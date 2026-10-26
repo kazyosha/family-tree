@@ -48,6 +48,20 @@ LOG_CHANNEL=stderr
 
 Không đặt connection string đầy đủ vào source. Kiểm tra kết nối bằng `php artisan migrate:status`, sau đó chạy `php artisan migrate --force`.
 
+## Cloudflare R2
+
+Tạo private R2 bucket và API token chỉ có quyền đọc/ghi bucket đó. Không bật `r2.dev` hoặc custom public domain. Điền vào `.env`:
+
+```dotenv
+R2_ACCESS_KEY_ID=...
+R2_SECRET_ACCESS_KEY=...
+R2_BUCKET=tet-memory-media
+R2_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+R2_REGION=auto
+```
+
+Kiểm tra kết nối bằng `php artisan app:storage-check`. Command tạo một probe tạm, đọc lại rồi xóa ngay.
+
 ## Tài liệu
 
 - Thiết kế: `docs/superpowers/specs/2026-10-26-tet-memory-archive-design.md`
