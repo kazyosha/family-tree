@@ -47,8 +47,23 @@ class StorageCheckCommandTest extends TestCase
     {
         $disk = Mockery::mock(FilesystemAdapter::class);
         $disk->shouldReceive('put')->once()->andReturnTrue();
+        $disk->shouldReceive('exists')->once()->andReturnTrue();
         $disk->shouldReceive('get')->once()->andReturn('tet-memory-r2-health-check');
         $disk->shouldReceive('delete')->twice()->andReturnFalse();
+        Storage::shouldReceive('disk')->with('r2')->andReturn($disk);
+
+        $this->artisan('app:storage-check')
+            ->expectsOutput('R2 storage check failed')
+            ->assertExitCode(1);
+    }
+
+    public function test_storage_check_fails_when_probe_remains_after_delete(): void
+    {
+        $disk = Mockery::mock(FilesystemAdapter::class);
+        $disk->shouldReceive('put')->once()->andReturnTrue();
+        $disk->shouldReceive('exists')->twice()->andReturnTrue();
+        $disk->shouldReceive('get')->once()->andReturn('tet-memory-r2-health-check');
+        $disk->shouldReceive('delete')->twice()->andReturnTrue();
         Storage::shouldReceive('disk')->with('r2')->andReturn($disk);
 
         $this->artisan('app:storage-check')

@@ -22,8 +22,15 @@ class StorageCheckCommand extends Command
 
         try {
             $disk = Storage::disk('r2');
-            $disk->put($path, $content);
+            if (! $disk->put($path, $content)) {
+                throw new \RuntimeException('R2 probe write failed');
+            }
+
             $created = true;
+
+            if (! $disk->exists($path)) {
+                throw new \RuntimeException('R2 probe was not found');
+            }
 
             if ($disk->get($path) !== $content) {
                 throw new \RuntimeException('R2 probe content mismatch');
@@ -31,6 +38,10 @@ class StorageCheckCommand extends Command
 
             if (! $disk->delete($path)) {
                 throw new \RuntimeException('R2 probe cleanup failed');
+            }
+
+            if ($disk->exists($path)) {
+                throw new \RuntimeException('R2 probe remains after cleanup');
             }
 
             $created = false;

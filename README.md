@@ -19,17 +19,15 @@ Kho lưu giữ ảnh, video và âm thanh của gia đình theo từng dịp T�
 ## Khởi động
 
 ```powershell
-Copy-Item .env.example .env
 composer install
+Copy-Item .env.example .env
 php artisan key:generate
-New-Item -ItemType File database/database.sqlite -ErrorAction SilentlyContinue
-php artisan migrate
 npm install
 npm run build
 php artisan test
 ```
 
-Không commit `.env`, mật khẩu Neon hoặc khóa Cloudflare R2. Máy local không cần Docker hoặc PostgreSQL.
+Sau đó điền thông tin Neon và R2 như hai mục bên dưới rồi chạy `php artisan migrate`. Không commit `.env`, mật khẩu Neon hoặc khóa Cloudflare R2. Máy local không cần Docker hoặc PostgreSQL cài trực tiếp.
 
 ## Neon PostgreSQL
 

@@ -45,5 +45,6 @@ class DeploymentConfigurationTest extends TestCase
 
         $this->assertStringContainsString('git rev-list --all', $workflow);
         $this->assertStringNotContainsString(':!.env.example', $workflow);
+        $this->assertStringContainsString('gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e', $workflow);
     }
 }
