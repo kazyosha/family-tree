@@ -20,8 +20,10 @@ Kho lưu giữ ảnh, video và âm thanh của gia đình theo từng dịp T�
 
 ```powershell
 Copy-Item .env.example .env
-php artisan key:generate
 composer install
+php artisan key:generate
+New-Item -ItemType File database/database.sqlite -ErrorAction SilentlyContinue
+php artisan migrate
 npm install
 npm run build
 php artisan test
@@ -61,6 +63,20 @@ R2_REGION=auto
 ```
 
 Kiểm tra kết nối bằng `php artisan app:storage-check`. Command tạo một probe tạm, đọc lại rồi xóa ngay.
+
+## Deploy Vercel bằng container
+
+Vercel tự phát hiện `Dockerfile.vercel` ở thư mục gốc. Image dùng FrankenPHP và chỉ ghi vào `storage/` cùng `bootstrap/cache/`; dữ liệu lâu dài vẫn nằm ở Neon và R2.
+
+1. Push repo lên GitHub và đợi bốn job CI xanh: PHP, frontend assets, Vercel container và secret scan.
+2. Import repo `kazyosha/family-tree` trong Vercel.
+3. Tạo biến riêng cho Preview và Production: `APP_KEY`, `APP_ENV`, `APP_DEBUG=false`, `APP_URL`, toàn bộ `DB_*`, `SESSION_DRIVER=database`, `CACHE_STORE=database`, `LOG_CHANNEL=stderr` và toàn bộ biến `R2_*`.
+4. Chạy migration như một release step riêng bằng `php artisan migrate --force`. Không chạy migration khi container khởi động vì nhiều instance có thể cùng chạy một lúc.
+5. Kiểm tra `/up`, `/` và `php artisan app:storage-check` trước khi đưa Preview lên Production.
+
+Không dùng chung `APP_KEY` giữa Preview và Production. Không chạy `php artisan optimize` trong lúc build vì Vercel chỉ cấp các biến bí mật khi container chạy.
+
+Tham khảo: [Vercel hướng dẫn triển khai Laravel với FrankenPHP](https://vercel.com/kb/guide/laravel-php-with-docker).
 
 ## Tài liệu
 

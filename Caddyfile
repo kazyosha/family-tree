@@ -1,0 +1,15 @@
+{
+    auto_https off
+}
+
+:{$PORT:80} {
+    root * /app/public
+    encode zstd gzip
+
+    @dotfiles path_regexp (^|/)\.
+    respond @dotfiles 404
+
+    php_server {
+        try_files {path} index.php
+    }
+}

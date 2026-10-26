@@ -1,0 +1,61 @@
+FROM node:24-bookworm-slim AS assets
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+
+FROM composer:2 AS dependencies
+
+WORKDIR /app
+
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --no-progress \
+    --no-scripts \
+    --prefer-dist
+
+COPY . .
+RUN composer dump-autoload --no-dev --classmap-authoritative --no-interaction
+
+
+FROM dunglas/frankenphp:1-php8.5-trixie AS runtime
+
+RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+    && install-php-extensions pdo_pgsql intl zip opcache
+
+WORKDIR /app
+
+COPY . .
+COPY --from=dependencies /app/vendor /app/vendor
+COPY --from=assets /app/public/build /app/public/build
+COPY Caddyfile /etc/caddy/Caddyfile
+
+RUN mkdir -p \
+        storage/framework/cache \
+        storage/framework/sessions \
+        storage/framework/views \
+        bootstrap/cache \
+        /config/caddy \
+        /data/caddy \
+    && chown -R www-data:www-data storage bootstrap/cache /config/caddy /data/caddy \
+    && chmod -R u=rwX,g=rX,o=rX storage bootstrap/cache \
+    && setcap CAP_NET_BIND_SERVICE=+eip /usr/local/bin/frankenphp
+
+ENV PORT=80 \
+    APP_ENV=production \
+    APP_DEBUG=false \
+    LOG_CHANNEL=stderr \
+    SESSION_DRIVER=database \
+    CACHE_STORE=database \
+    QUEUE_CONNECTION=sync
+
+USER www-data
+
+CMD ["frankenphp", "run", "--config", "/etc/caddy/Caddyfile"]

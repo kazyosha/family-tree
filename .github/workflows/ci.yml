@@ -1,0 +1,151 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  php:
+    name: PHP
+    runs-on: ubuntu-latest
+    env:
+      APP_ENV: testing
+      APP_KEY: base64:QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE=
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ':memory:'
+      SESSION_DRIVER: array
+      CACHE_STORE: array
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: curl, dom, fileinfo, intl, mbstring, openssl, pdo_sqlite, sqlite3, xml, zip
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: Check PHP formatting
+        run: vendor/bin/pint --test
+
+      - name: Run PHP tests
+        run: php artisan test
+
+  assets:
+    name: Frontend assets
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build frontend assets
+        run: npm run build
+
+  container:
+    name: Vercel container
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: tet_memory_ci
+          POSTGRES_USER: tet_memory
+          POSTGRES_PASSWORD: ci-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tet_memory -d tet_memory_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Build image
+        run: docker build --file Dockerfile.vercel --tag tet-memory:ci .
+
+      - name: Run migrations
+        run: >-
+          docker run --rm --network host
+          -e APP_KEY=base64:QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE=
+          -e DB_CONNECTION=pgsql
+          -e DB_HOST=127.0.0.1
+          -e DB_PORT=5432
+          -e DB_DATABASE=tet_memory_ci
+          -e DB_USERNAME=tet_memory
+          -e DB_PASSWORD=ci-only-password
+          -e DB_SSLMODE=prefer
+          tet-memory:ci php artisan migrate --force
+
+      - name: Start container
+        run: >-
+          docker run --detach --name tet-memory-ci --network host
+          -e PORT=8080
+          -e APP_KEY=base64:QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE=
+          -e DB_CONNECTION=pgsql
+          -e DB_HOST=127.0.0.1
+          -e DB_PORT=5432
+          -e DB_DATABASE=tet_memory_ci
+          -e DB_USERNAME=tet_memory
+          -e DB_PASSWORD=ci-only-password
+          -e DB_SSLMODE=prefer
+          tet-memory:ci
+
+      - name: Smoke test health endpoint
+        run: |
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:8080/up > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs tet-memory-ci
+          exit 1
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Reject tracked environment files
+        shell: bash
+        run: |
+          tracked_env=$(git ls-files | grep -E '(^|/)\.env($|\.)' | grep -v -E '(^|/)\.env\.example$' || true)
+          if [ -n "$tracked_env" ]; then
+            printf 'Tracked environment file found:\n%s\n' "$tracked_env"
+            exit 1
+          fi
+
+      - name: Reject literal provider credentials
+        shell: bash
+        run: |
+          if git grep -nEI '(postgres(ql)?://[^[:space:]]+@|R2_SECRET_ACCESS_KEY=[A-Za-z0-9+/]{20,}|R2_ACCESS_KEY_ID=[A-Za-z0-9]{20,}|https://[a-f0-9]{32}\.r2\.cloudflarestorage\.com)' -- ':!.env.example'; then
+            echo 'Possible literal Neon or R2 credential found.'
+            exit 1
+          fi
