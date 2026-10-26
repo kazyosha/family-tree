@@ -29,6 +29,25 @@ php artisan test
 
 Không commit `.env`, mật khẩu Neon hoặc khóa Cloudflare R2. Máy local không cần Docker hoặc PostgreSQL.
 
+## Neon PostgreSQL
+
+Trong Neon Console, chọn kết nối **Pooled** rồi điền từng thành phần vào `.env`:
+
+```dotenv
+DB_CONNECTION=pgsql
+DB_HOST=ep-...-pooler....neon.tech
+DB_PORT=5432
+DB_DATABASE=neondb
+DB_USERNAME=...
+DB_PASSWORD=...
+DB_SSLMODE=require
+SESSION_DRIVER=database
+CACHE_STORE=database
+LOG_CHANNEL=stderr
+```
+
+Không đặt connection string đầy đủ vào source. Kiểm tra kết nối bằng `php artisan migrate:status`, sau đó chạy `php artisan migrate --force`.
+
 ## Tài liệu
 
 - Thiết kế: `docs/superpowers/specs/2026-10-26-tet-memory-archive-design.md`
