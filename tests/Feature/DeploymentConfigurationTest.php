@@ -10,6 +10,7 @@ class DeploymentConfigurationTest extends TestCase
     {
         $dockerfile = file_get_contents(base_path('Dockerfile.vercel'));
         $caddyfile = file_get_contents(base_path('Caddyfile'));
+        $home = file_get_contents(resource_path('views/home.blade.php'));
         $vercel = json_decode(file_get_contents(base_path('vercel.json')), true, flags: JSON_THROW_ON_ERROR);
 
         $this->assertStringContainsString('dunglas/frankenphp:1-php8.5-trixie', $dockerfile);
@@ -24,6 +25,7 @@ class DeploymentConfigurationTest extends TestCase
         $this->assertStringContainsString('php_server', $caddyfile);
         $this->assertStringContainsString('auto_https off', $caddyfile);
         $this->assertStringContainsString('@dotfiles path_regexp', $caddyfile);
+        $this->assertStringContainsString("@vite(['resources/css/app.css', 'resources/js/app.js'])", $home);
 
         $this->assertSame('https://openapi.vercel.sh/vercel.json', $vercel['$schema']);
     }
@@ -45,6 +47,8 @@ class DeploymentConfigurationTest extends TestCase
 
         $this->assertStringContainsString('git rev-list --all', $workflow);
         $this->assertStringNotContainsString(':!.env.example', $workflow);
-        $this->assertStringContainsString('gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e', $workflow);
+        $this->assertStringContainsString('docker://ghcr.io/gitleaks/gitleaks@sha256:691af3c7c5a48b16f187ce3446d5f194838f91238f27270ed36eef6359a574d9', $workflow);
+        $this->assertStringContainsString('args: git --redact --verbose /github/workspace', $workflow);
+        $this->assertStringNotContainsString('gitleaks/gitleaks-action', $workflow);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class HomePageTest extends TestCase
@@ -18,9 +19,6 @@ class HomePageTest extends TestCase
         $html = $response->getContent();
 
         $response->assertOk()->assertSeeText('Ký ức Tết');
-        $this->assertStringContainsString('/build/assets/app-', $html);
-        $this->assertStringContainsString('.css', $html);
-        $this->assertStringContainsString('.js', $html);
         $this->assertStringNotContainsString('QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE=', $html);
         $this->assertStringNotContainsString('sensitive-db-host.example', $html);
         $this->assertStringNotContainsString('sensitive-r2-endpoint.example', $html);
@@ -34,12 +32,14 @@ class HomePageTest extends TestCase
 
     public function test_vercel_forwarded_https_headers_generate_secure_asset_urls(): void
     {
+        Route::get('/proxy-probe', fn (): string => asset('build/assets/app.js'));
+
         $response = $this->withHeaders([
             'X-Forwarded-Host' => 'family.example',
             'X-Forwarded-Proto' => 'https',
-        ])->get('/');
+        ])->get('/proxy-probe');
 
         $response->assertOk();
-        $this->assertStringContainsString('https://family.example/build/assets/', $response->getContent());
+        $response->assertSeeText('https://family.example/build/assets/app.js');
     }
 }
