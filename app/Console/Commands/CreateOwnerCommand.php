@@ -21,8 +21,8 @@ class CreateOwnerCommand extends Command
     {
         $name = (string) $this->ask('Họ và tên');
         $email = Str::lower(trim((string) $this->ask('Email')));
-        $password = (string) $this->secret('Mật khẩu');
-        $passwordConfirmation = (string) $this->secret('Nhập lại mật khẩu');
+        $password = (string) $this->secret('Mật khẩu', fallback: false);
+        $passwordConfirmation = (string) $this->secret('Nhập lại mật khẩu', fallback: false);
 
         $validator = Validator::make([
             'name' => $name,

@@ -73,6 +73,18 @@ class LoginTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_array_email_is_rejected_without_a_server_error(): void
+    {
+        $response = $this->from('/login')->post('/login', [
+            'email' => ['owner@example.com'],
+            'password' => 'Mat-khau-rieng-2026!',
+        ]);
+
+        $response
+            ->assertRedirect('/login')
+            ->assertSessionHasErrors('email');
+    }
+
     public function test_email_is_normalized_before_authentication(): void
     {
         $user = User::factory()->create([

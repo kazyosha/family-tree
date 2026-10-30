@@ -2,10 +2,12 @@
 
 namespace Tests\Feature\Console;
 
+use App\Console\Commands\CreateOwnerCommand;
 use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Mockery;
 use Tests\TestCase;
 
 class CreateOwnerCommandTest extends TestCase
@@ -62,5 +64,19 @@ class CreateOwnerCommandTest extends TestCase
 
         $this->assertSame(UserRole::Viewer, $user->role);
         $this->assertFalse($user->is_active);
+    }
+
+    public function test_create_owner_command_disables_visible_password_fallback(): void
+    {
+        $password = 'Mat-khau-rieng-2026!';
+        $command = Mockery::mock(CreateOwnerCommand::class)->makePartial();
+
+        $command->shouldReceive('ask')->once()->with('Họ và tên')->andReturn('Chủ gia đình');
+        $command->shouldReceive('ask')->once()->with('Email')->andReturn('owner@example.com');
+        $command->shouldReceive('secret')->once()->with('Mật khẩu', false)->andReturn($password);
+        $command->shouldReceive('secret')->once()->with('Nhập lại mật khẩu', false)->andReturn($password);
+        $command->shouldReceive('info')->once()->with('Đã lưu tài khoản OWNER.');
+
+        $this->assertSame(0, $command->handle());
     }
 }
