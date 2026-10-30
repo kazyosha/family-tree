@@ -48,6 +48,23 @@ LOG_CHANNEL=stderr
 
 Không đặt connection string đầy đủ vào source. Kiểm tra kết nối bằng `php artisan migrate:status`, sau đó chạy `php artisan migrate --force`.
 
+## Tạo chủ sở hữu và đăng nhập
+
+Ứng dụng không có đăng ký công khai. Sau khi cấu hình database, chạy migration rồi tạo tài khoản `OWNER` đầu tiên:
+
+```powershell
+php artisan migrate --force
+php artisan app:create-owner
+```
+
+Command sẽ hỏi họ tên, email, mật khẩu và xác nhận mật khẩu. Mật khẩu được nhập ẩn, được hash trước khi lưu và không được ghi vào output.
+
+- Trang đăng nhập: `/login`
+- Không gian riêng sau đăng nhập: `/dashboard`
+- Đăng xuất chỉ được thực hiện bằng biểu mẫu `POST` có CSRF protection.
+- Chỉ tài khoản có trạng thái hoạt động mới đăng nhập được. Tài khoản không hoạt động nhận cùng thông báo chung như thông tin đăng nhập sai.
+- Không có route đăng ký công khai hoặc khôi phục mật khẩu trong chặng hiện tại. Chủ sở hữu chịu trách nhiệm cấp hoặc đặt lại tài khoản thành viên ở tính năng quản lý tiếp theo.
+
 ## Cloudflare R2
 
 Tạo private R2 bucket và API token chỉ có quyền đọc/ghi bucket đó. Không bật `r2.dev` hoặc custom public domain. Điền vào `.env`:
