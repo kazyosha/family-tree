@@ -17,7 +17,10 @@
                     <span>Ký ức Tết</span>
                 </a>
 
-                <span class="privacy-label">Không gian gia đình</span>
+                <nav class="header-actions" aria-label="Tài khoản">
+                    <span class="privacy-label">Không gian gia đình</span>
+                    <a class="text-link" href="{{ route('login') }}">Đăng nhập</a>
+                </nav>
             </header>
 
             <main class="hero">

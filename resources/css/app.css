@@ -101,6 +101,24 @@ a {
     font-size: .82rem;
 }
 
+.header-actions,
+.member-summary {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.text-link {
+    color: var(--accent);
+    font-weight: 650;
+    text-decoration-color: color-mix(in srgb, var(--accent), transparent 45%);
+    text-underline-offset: .25rem;
+}
+
+.text-link:hover {
+    text-decoration-color: currentColor;
+}
+
 .hero {
     display: grid;
     width: 100%;
@@ -220,9 +238,196 @@ h1 {
 }
 
 .details-button:focus-visible,
-.brand:focus-visible {
+.brand:focus-visible,
+.text-link:focus-visible,
+.primary-button:focus-visible,
+.secondary-button:focus-visible,
+.form-field input:focus-visible {
     outline: 3px solid color-mix(in srgb, var(--accent), transparent 45%);
     outline-offset: 4px;
+}
+
+.auth-main,
+.dashboard-main {
+    width: 100%;
+    max-width: 78rem;
+    margin: 0 auto;
+}
+
+.auth-main {
+    display: grid;
+    align-items: center;
+    gap: 3rem;
+    padding: 3rem 0;
+}
+
+.auth-intro {
+    max-width: 35rem;
+}
+
+.auth-title,
+.dashboard-title {
+    max-width: 12ch;
+    font-size: clamp(2.8rem, 7vw, 5.8rem);
+}
+
+.auth-card,
+.dashboard-empty {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--surface-raised);
+}
+
+.auth-card-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+    font-size: .8rem;
+}
+
+.auth-card-heading strong {
+    color: var(--accent);
+    font-weight: 650;
+}
+
+.auth-form {
+    display: grid;
+    gap: 1.35rem;
+    padding: 2rem 1.5rem 1.5rem;
+}
+
+.form-field {
+    display: grid;
+    gap: .55rem;
+}
+
+.form-field label {
+    font-size: .85rem;
+    font-weight: 650;
+}
+
+.form-field input {
+    width: 100%;
+    min-height: 3.15rem;
+    box-sizing: border-box;
+    padding: .75rem .9rem;
+    border: 1px solid var(--line);
+    border-radius: .7rem;
+    color: var(--ink);
+    background: var(--surface);
+    font: inherit;
+}
+
+.form-field input::placeholder {
+    color: var(--muted);
+}
+
+.form-error {
+    margin: 0;
+    color: var(--accent);
+    font-size: .82rem;
+    line-height: 1.45;
+}
+
+.primary-button,
+.secondary-button {
+    min-height: 2.85rem;
+    border-radius: .7rem;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.primary-button {
+    border: 1px solid var(--accent);
+    color: var(--accent-ink);
+    background: var(--accent);
+}
+
+.secondary-button {
+    padding: .65rem 1rem;
+    border: 1px solid var(--line);
+    color: var(--ink);
+    background: transparent;
+}
+
+.primary-button:hover,
+.secondary-button:hover {
+    filter: brightness(.94);
+}
+
+.auth-help {
+    margin: 0;
+    padding: 0 1.5rem 1.5rem;
+    color: var(--muted);
+    font-size: .82rem;
+    line-height: 1.55;
+}
+
+.dashboard-main {
+    padding: 3rem 0 4rem;
+}
+
+.dashboard-heading {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.member-summary {
+    min-width: 0;
+    justify-content: flex-end;
+}
+
+.member-name {
+    overflow: hidden;
+    max-width: 13rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: .85rem;
+    font-weight: 650;
+}
+
+.role-label {
+    padding: .35rem .55rem;
+    border: 1px solid var(--line);
+    border-radius: .55rem;
+    color: var(--muted);
+    font-size: .72rem;
+}
+
+.dashboard-empty {
+    min-height: 24rem;
+}
+
+.dashboard-empty-copy {
+    display: flex;
+    min-height: 17rem;
+    align-items: flex-end;
+    padding: 2rem 1.5rem;
+}
+
+.dashboard-empty-copy h2 {
+    max-width: 18ch;
+    margin: 0;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    font-weight: 600;
+    letter-spacing: -.045em;
+    line-height: 1.08;
+}
+
+.dashboard-empty-copy p {
+    max-width: 42rem;
+    margin: 1rem 0 0;
+    color: var(--muted);
+    line-height: 1.65;
 }
 
 .privacy-details {
@@ -260,6 +465,39 @@ h1 {
     .empty-copy {
         padding-right: 2rem;
         padding-left: 2rem;
+    }
+
+    .auth-main {
+        grid-template-columns: minmax(0, 1fr) minmax(22rem, .8fr);
+        gap: clamp(3rem, 9vw, 9rem);
+        padding: 4.5rem 0;
+    }
+
+    .auth-card {
+        min-height: 30rem;
+    }
+
+    .auth-form {
+        padding: 3rem 2rem 2rem;
+    }
+
+    .auth-help,
+    .auth-card-heading,
+    .dashboard-empty-copy {
+        padding-right: 2rem;
+        padding-left: 2rem;
+    }
+}
+
+@media (max-width: 639px) {
+    .privacy-label,
+    .member-name {
+        display: none;
+    }
+
+    .dashboard-heading {
+        align-items: flex-start;
+        flex-direction: column;
     }
 }
 
